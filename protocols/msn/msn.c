@@ -142,7 +142,7 @@ static int msn_buddy_msg(struct im_connection *ic, char *who, char *message, int
 
 #ifdef DEBUG
 	if (strcmp(who, "raw") == 0) {
-		msn_ns_write(ic, -1, "%s\r\n", message);
+		msn_ns_write(ic, "%s\r\n", message);
 		return 0;
 	}
 #endif
@@ -191,7 +191,7 @@ static void msn_set_away(struct im_connection *ic, char *state, char *message)
 	buf = g_strdup_printf(MSN_PUT_HEADERS, ic->acc->user, ic->acc->user, md->uuid,
 		"/user", "application/user+xml",
 		strlen(body), body);
-	msn_ns_write(ic, -1, "PUT %d %zd\r\n%s", ++md->trId, strlen(buf), buf);
+	msn_ns_write(ic, "PUT %d %zd\r\n%s", ++md->trId, strlen(buf), buf);
 
 	g_free(buf);
 	g_free(body);
@@ -242,7 +242,7 @@ static struct groupchat *msn_chat_with(struct im_connection *ic, char *who)
 
 static void msn_keepalive(struct im_connection *ic)
 {
-	msn_ns_write(ic, -1, "PNG\r\n");
+	msn_ns_write(ic, "PNG\r\n");
 }
 
 static void msn_add_permit(struct im_connection *ic, char *who)
