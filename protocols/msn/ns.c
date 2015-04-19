@@ -296,8 +296,9 @@ int msn_ns_command(struct msn_data *md, char **cmd, int num_parts, char *msg, in
 		g_free(payload);
 		g_free(resp);
 
-	} else if (strcmp(cmd[0], "ADL") == 0) {
-		if (num_parts >= 3 && strcmp(cmd[2], "OK") == 0) {
+	} else if (strcmp(cmd[0], "PUT") == 0) {
+		/* We could keep track TrIDs... or we could guess what this PUT means */
+		if ((md->flags & MSN_DONE_BND) && !(md->flags & MSN_DONE_ADL)) {
 			msn_ns_send_adl(ic);
 			return msn_ns_finish_login(ic);
 		}
@@ -478,7 +479,7 @@ static void msn_ns_structured_message(struct msn_data *md, char *msg, int msglen
 		msn_ns_sdg(md, who, parts, action);
 
 	} else if ((strcmp(cmd[0], "NFY") == 0) && (action = get_rfc822_header(parts[2], "Uri", 0))) {
-		gboolean is_put = (strcmp(cmd[1], "PUT") == 0);
+		gboolean is_put = (strcmp(cmd[2], "MSGR\\PUT") == 0);
 		msn_ns_nfy(md, who, parts, action, is_put);
 	}
 
@@ -662,7 +663,7 @@ static void msn_ns_send_adl(struct im_connection *ic)
 
 	adls = xt_to_string(adl);
 	xt_free_node(adl);
-	msn_ns_write(ic, "ADL %d %zd\r\n%s", ++md->trId, strlen(adls), adls);
+	msn_ns_write_cmd(ic, "PUT", "MSGR\\CONTACTS", adls);
 	g_free(adls);
 }
 
@@ -726,7 +727,7 @@ int msn_ns_sendmessage(struct im_connection *ic, bee_user_t *bu, const char *tex
 	}
 
 	buf = g_strdup_printf(MSN_MESSAGE_HEADERS, bu->handle, ic->acc->user, md->uuid, strlen(text), text);
-	retval = msn_ns_write(ic, "SDG %d %zd\r\n%s", ++md->trId, strlen(buf), buf);
+	retval = msn_ns_write_cmd(ic, "SDG", "MSGR", buf);
 	g_free(buf);
 	return retval;
 }
